@@ -1,9 +1,38 @@
 function renderNav(sections) {
-  const navList = document.getElementById("nav-list");
+  const navShell = document.querySelector(".site-nav .site-shell");
 
-  navList.innerHTML = sections
-    .map((section) => `<li><a href="#${section.id}" data-nav-link="${section.id}">${section.label}</a></li>`)
-    .join("");
+  navShell.innerHTML = `
+    <div class="nav-toolbar">
+      <button
+        class="nav-toggle"
+        id="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-list"
+      >
+        <span class="nav-toggle-label">目录</span>
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+      </button>
+      <button
+        class="nav-score-toggle"
+        id="nav-score-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-score-panel"
+      >
+        <span class="nav-score-toggle-label">计分器</span>
+        <span class="nav-score-toggle-state">收起</span>
+      </button>
+    </div>
+    <div class="nav-score-panel" id="nav-score-panel" hidden>
+      ${renderScoringCalculator()}
+    </div>
+    <ul id="nav-list" class="nav-list">
+      ${sections
+        .map((section) => `<li><a href="#${section.id}" data-nav-link="${section.id}">${section.label}</a></li>`)
+        .join("")}
+    </ul>
+  `;
 }
 
 function renderSections(sections) {
@@ -13,7 +42,7 @@ function renderSections(sections) {
     <div class="page-sections">
       ${sections.map(renderSection).join("")}
       <footer class="site-footer">
-        <p>当前版本已包含角色指南、计分规则与可交互的终局计分器。</p>
+        <p>计分器已经收进导航栏，页面正文保留更轻量的规则与角色参考。</p>
       </footer>
     </div>
   `;
@@ -310,13 +339,14 @@ function renderScoringSection(section, index) {
             `).join("")}
           </div>
         </section>
-        <section class="content-card">
+        <details class="content-card collapsible-card">
+          <summary>示例计算</summary>
           <h3>${scoringRules.example.title}</h3>
           <p>${scoringRules.example.body}</p>
           <p class="inline-note">${scoringRules.note}</p>
-        </section>
-        <section class="content-card content-card-full">
-          <h3>特殊关系判定</h3>
+        </details>
+        <details class="content-card collapsible-card content-card-full">
+          <summary>特殊关系判定</summary>
           <div class="stack-list">
             ${scoringRules.specialCases.map(([label, value]) => `
               <article class="mini-card">
@@ -325,9 +355,9 @@ function renderScoringSection(section, index) {
               </article>
             `).join("")}
           </div>
-        </section>
+        </details>
       </div>
-      ${renderScoringCalculator()}
+      <p class="scoring-callout">终局试算器已放入导航栏，适合在对局中随时展开调整。</p>
     </section>
   `;
 }
@@ -501,8 +531,8 @@ function renderCharacterCard(char, index) {
             <strong>${char.special}</strong>
           </div>
         </section>
-        <section class="character-panel">
-          <h4>社交关系</h4>
+        <details class="character-panel character-panel-collapsible">
+          <summary>社交关系</summary>
           <div class="character-note">
             <span class="character-note-label">重点威胁</span>
             <p>${char.threat}</p>
@@ -511,7 +541,7 @@ function renderCharacterCard(char, index) {
             <span class="character-note-label">结盟方向</span>
             <p>${char.ally}</p>
           </div>
-        </section>
+        </details>
         <section class="character-panel character-panel-full">
           <h4>核心打法</h4>
           <div class="character-tips">
@@ -547,7 +577,7 @@ function renderScoringCalculator() {
       <div class="calculator-toolbar">
         <div>
           <h3>终局计分器</h3>
-          <p>先选择本局人数，计分器会自动带出对应角色；再填写每名角色的生死、财宝和爱恨关系，结果会自动更新。</p>
+          <p>先选本局人数，再填写生死、财宝和爱恨关系，结果会自动更新。</p>
         </div>
         <div class="calculator-toolbar-side">
           <label class="calculator-player-count">
@@ -561,8 +591,8 @@ function renderScoringCalculator() {
             </select>
           </label>
           <div class="calculator-actions">
-          <button class="faq-toolbar-button" type="button" data-score-action="example">载入示例</button>
-          <button class="faq-toolbar-button" type="button" data-score-action="reset">重置</button>
+            <button class="faq-toolbar-button" type="button" data-score-action="example">载入示例</button>
+            <button class="faq-toolbar-button" type="button" data-score-action="reset">重置</button>
           </div>
         </div>
       </div>
@@ -814,6 +844,8 @@ function renderScoreResults(container) {
     ? "提示：同一名角色同时“爱自己又恨自己”通常不属于基础规则牌组，结果仅作近似参考。"
     : "提示：若爱自己就是“自恋”，恨自己就是“反社会”，爱恨同指一人则按“矛盾”处理。";
 
+  const wasBreakdownOpen = resultsHost.querySelector("[data-score-breakdown-details]")?.open ?? false;
+
   const ranking = activePlayers
     .map((char) => {
       const score = calculatePlayerScore(state[char.id], state);
@@ -831,22 +863,25 @@ function renderScoreResults(container) {
         </article>
       `).join("")}
     </div>
-    <div class="score-breakdown-list">
-      ${ranking.map((item) => `
-        <article class="score-breakdown-card">
-          <div class="score-breakdown-head">
-            <div>
-              <strong>${item.char.icon} ${item.char.name}</strong>
-              <span>总分 ${item.total}</span>
+    <details class="score-breakdown-details" data-score-breakdown-details${wasBreakdownOpen ? " open" : ""}>
+      <summary>展开逐项明细</summary>
+      <div class="score-breakdown-list">
+        ${ranking.map((item) => `
+          <article class="score-breakdown-card">
+            <div class="score-breakdown-head">
+              <div>
+                <strong>${item.char.icon} ${item.char.name}</strong>
+                <span>总分 ${item.total}</span>
+              </div>
+              <span>${state[item.char.id].status === "alive" ? "存活" : "死亡"}</span>
             </div>
-            <span>${state[item.char.id].status === "alive" ? "存活" : "死亡"}</span>
-          </div>
-          <ul class="bullet-list">
-            ${item.breakdown.map((line) => `<li>${line}</li>`).join("")}
-          </ul>
-        </article>
-      `).join("")}
-    </div>
+            <ul class="bullet-list">
+              ${item.breakdown.map((line) => `<li>${line}</li>`).join("")}
+            </ul>
+          </article>
+        `).join("")}
+      </div>
+    </details>
   `;
 }
 
@@ -1092,6 +1127,30 @@ function bindNavHighlight() {
   sections.forEach((section) => observer.observe(section));
 }
 
+function bindScorePanelToggle() {
+  const toggle = document.getElementById("nav-score-toggle");
+  const panel = document.getElementById("nav-score-panel");
+
+  if (!toggle || !panel) return;
+
+  const setState = (isOpen) => {
+    toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    panel.hidden = !isOpen;
+    const stateLabel = toggle.querySelector(".nav-score-toggle-state");
+
+    if (stateLabel) {
+      stateLabel.textContent = isOpen ? "收起" : "展开";
+    }
+  };
+
+  setState(false);
+
+  toggle.addEventListener("click", () => {
+    const isOpen = toggle.getAttribute("aria-expanded") === "true";
+    setState(!isOpen);
+  });
+}
+
 function bindMobileNav() {
   const toggle = document.getElementById("nav-toggle");
   const navList = document.getElementById("nav-list");
@@ -1126,6 +1185,7 @@ function bootstrap() {
   bindAccordions();
   bindFaq();
   bindNavHighlight();
+  bindScorePanelToggle();
   bindMobileNav();
 }
 
