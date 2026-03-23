@@ -144,6 +144,19 @@ function renderOverviewSection(section, index) {
             ${overviewData.anniversary.map((item) => `<span class="pill">${item}</span>`).join("")}
           </div>
         </section>
+        <section class="content-card content-card-full">
+          <h3>基础补给牌一览</h3>
+          <div class="stack-list">
+            ${overviewData.provisions.map((item) => `
+              <article class="mini-card">
+                <strong>${item.name}</strong>
+                <span>${item.count} 张</span>
+                <p>${item.detail}</p>
+              </article>
+            `).join("")}
+          </div>
+          <p class="inline-note">${overviewData.provisionsNote}</p>
+        </section>
       </div>
     </section>
   `;
@@ -371,7 +384,11 @@ function renderVariantsSection(section, index) {
         ${variantCards.map((item) => `
           <article class="content-card">
             <h3>${item.title}</h3>
+            <p class="variant-meta">${item.meta}</p>
             <p>${item.detail}</p>
+            <ul class="bullet-list">
+              ${item.bullets.map((point) => `<li>${point}</li>`).join("")}
+            </ul>
           </article>
         `).join("")}
       </div>
