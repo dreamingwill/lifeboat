@@ -547,11 +547,23 @@ function renderScoringCalculator() {
       <div class="calculator-toolbar">
         <div>
           <h3>终局计分器</h3>
-          <p>先标记本局出场角色，再填每名角色的生死、财宝和爱恨关系，结果会自动更新。</p>
+          <p>先选择本局人数，计分器会自动带出对应角色；再填写每名角色的生死、财宝和爱恨关系，结果会自动更新。</p>
         </div>
-        <div class="calculator-actions">
+        <div class="calculator-toolbar-side">
+          <label class="calculator-player-count">
+            <span>本局人数</span>
+            <select data-score-player-count>
+              <option value="4">4 人</option>
+              <option value="5">5 人</option>
+              <option value="6" selected>6 人</option>
+              <option value="7">7 人</option>
+              <option value="8">8 人</option>
+            </select>
+          </label>
+          <div class="calculator-actions">
           <button class="faq-toolbar-button" type="button" data-score-action="example">载入示例</button>
           <button class="faq-toolbar-button" type="button" data-score-action="reset">重置</button>
+          </div>
         </div>
       </div>
       <div class="content-grid content-grid-two scoring-layout">
@@ -651,6 +663,14 @@ function buildRelationOptions(activeChars, selectedValue) {
     .join("");
 }
 
+const scoringPlayerSets = {
+  4: ["captain", "frenchy", "stephen", "lauren"],
+  5: ["captain", "frenchy", "stephen", "lauren", "kid"],
+  6: ["captain", "mate", "frenchy", "stephen", "lauren", "kid"],
+  7: ["captain", "mate", "frenchy", "stephen", "lauren", "kid", "harter"],
+  8: ["captain", "mate", "frenchy", "stephen", "lauren", "kid", "harter", "wong"]
+};
+
 function getScoringState(container) {
   const state = {};
 
@@ -675,6 +695,28 @@ function getScoringState(container) {
   });
 
   return state;
+}
+
+function buildPlayerCountPreset(playerCount, baseState) {
+  const activeIds = new Set(scoringPlayerSets[playerCount] || scoringPlayerSets[6]);
+
+  return chars.reduce((acc, char) => {
+    const current = baseState?.[char.id];
+    const isActive = activeIds.has(char.id);
+
+    acc[char.id] = {
+      active: isActive,
+      status: isActive ? current?.status ?? "alive" : "alive",
+      love: isActive ? current?.love ?? "" : "",
+      hate: isActive ? current?.hate ?? "" : "",
+      treasures: scoringTreasureTypes.reduce((treasures, type) => {
+        treasures[type.id] = isActive ? current?.treasures?.[type.id] ?? 0 : 0;
+        return treasures;
+      }, {})
+    };
+
+    return acc;
+  }, {});
 }
 
 function calculateTreasureScore(playerState) {
@@ -880,28 +922,27 @@ function bindScoringCalculator() {
 
   if (!container) return;
 
+  const playerCountSelect = container.querySelector("[data-score-player-count]");
+
   const examplePreset = {
     captain: { active: true, status: "alive", love: "kid", hate: "mate", treasures: { cash: 5, jewelry: 0, art: 0 } },
     mate: { active: true, status: "dead", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
     frenchy: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
     stephen: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
     lauren: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
-    kid: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } }
+    kid: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
+    harter: { active: false, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
+    wong: { active: false, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } }
   };
 
-  const resetPreset = chars.reduce((acc, char) => {
-    acc[char.id] = {
-      active: true,
-      status: "alive",
-      love: "",
-      hate: "",
-      treasures: { cash: 0, jewelry: 0, art: 0 }
-    };
-    return acc;
-  }, {});
+  function applyPlayerCountPreset(playerCount, preserveCurrentState = true) {
+    const baseState = preserveCurrentState ? getScoringState(container) : null;
+    const preset = buildPlayerCountPreset(playerCount, baseState);
+    playerCountSelect.value = String(playerCount);
+    applyScorePreset(container, preset);
+  }
 
-  syncScoringControls(container);
-  renderScoreResults(container);
+  applyPlayerCountPreset(Number(playerCountSelect.value), false);
 
   container.addEventListener("input", (event) => {
     if (!event.target.closest("[data-score-player]")) return;
@@ -915,17 +956,22 @@ function bindScoringCalculator() {
     renderScoreResults(container);
   });
 
+  playerCountSelect.addEventListener("change", () => {
+    applyPlayerCountPreset(Number(playerCountSelect.value));
+  });
+
   container.addEventListener("click", (event) => {
     const actionButton = event.target.closest("[data-score-action]");
 
     if (!actionButton) return;
 
     if (actionButton.dataset.scoreAction === "example") {
+      playerCountSelect.value = "6";
       applyScorePreset(container, examplePreset);
     }
 
     if (actionButton.dataset.scoreAction === "reset") {
-      applyScorePreset(container, resetPreset);
+      applyPlayerCountPreset(Number(playerCountSelect.value), false);
     }
   });
 }
