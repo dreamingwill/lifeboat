@@ -238,6 +238,11 @@ a {
   border-radius: var(--radius-lg);
   background: rgba(247, 241, 231, 0.92);
   box-shadow: var(--shadow-soft);
+  max-height: min(72vh, 760px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }
 
 .nav-score-panel .scoring-calculator {
