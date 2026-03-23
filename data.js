@@ -15,6 +15,23 @@ const siteMeta = {
   ]
 };
 
+const heroData = {
+  eyebrow: "Social Deduction · Negotiation · Survival",
+  title: "一条救生艇上的爱、恨、财宝与背叛",
+  summary: "《骇浪求生》不是单纯的生存游戏。你既要活下来，也要让你爱的人活着、你恨的人去死，还要尽可能把财宝攥在自己手里。",
+  highlights: [
+    "4–6 人最佳，5–6 人最有张力",
+    "45–60 分钟，适合一晚连开多局",
+    "隐藏关系、开放谈判、随时背刺",
+    "即使角色死亡，也可能靠爱恨结算翻盘"
+  ],
+  callouts: [
+    { label: "推荐人数", value: "5–6 人" },
+    { label: "节奏核心", value: "争船头、控船尾、藏爱恨" },
+    { label: "胜利错觉", value: "活到最后不一定会赢" }
+  ]
+};
+
 const overviewData = {
   intro: "一艘豪华游轮沉没后，幸存者们被迫挤进同一艘救生艇。每个人都暗中爱着某人、恨着某人，目标不是单纯活下来，而是在求生、背叛、谈判和抢夺财宝之间找到最高得分路径。",
   facts: [

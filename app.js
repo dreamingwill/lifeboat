@@ -20,6 +20,10 @@ function renderSections(sections) {
 }
 
 function renderSection(section, index) {
+  if (section.id === "hero") {
+    return renderHeroSection(section, index);
+  }
+
   if (section.id === "characters") {
     return renderCharactersSection(section, index);
   }
@@ -59,6 +63,42 @@ function renderSection(section, index) {
       <p>${section.placeholder}</p>
       <div class="section-placeholder">
         当前为骨架占位区。后续模块将在这里挂载真实内容与组件。
+      </div>
+    </section>
+  `;
+}
+
+function renderHeroSection(section, index) {
+  return `
+    <section class="page-section page-section-hero" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <div class="hero-layout">
+        <div class="hero-copy">
+          <p class="hero-eyebrow">${heroData.eyebrow}</p>
+          <h2>${heroData.title}</h2>
+          <p class="hero-summary">${heroData.summary}</p>
+          <div class="hero-pill-list">
+            ${heroData.highlights.map((item) => `<span class="hero-pill">${item}</span>`).join("")}
+          </div>
+        </div>
+        <aside class="hero-aside" aria-label="游戏摘要">
+          ${heroData.callouts.map((item) => `
+            <article class="hero-metric">
+              <span>${item.label}</span>
+              <strong>${item.value}</strong>
+            </article>
+          `).join("")}
+        </aside>
+      </div>
+      <div class="hero-scene" aria-hidden="true">
+        <div class="hero-wave hero-wave-back"></div>
+        <div class="hero-wave hero-wave-mid"></div>
+        <div class="hero-wave hero-wave-front"></div>
+        <div class="hero-boat">
+          <span class="hero-boat-body"></span>
+          <span class="hero-boat-cabin"></span>
+          <span class="hero-boat-flag"></span>
+        </div>
       </div>
     </section>
   `;
