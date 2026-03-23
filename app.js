@@ -167,14 +167,8 @@ function renderOverviewSection(section, index) {
             `).join("")}
           </div>
         </section>
-        <section class="content-card content-card-full">
-          <h3>25 周年豪华版新增</h3>
-          <div class="pill-list">
-            ${overviewData.anniversary.map((item) => `<span class="pill">${item}</span>`).join("")}
-          </div>
-        </section>
-        <section class="content-card content-card-full">
-          <h3>基础补给牌一览</h3>
+        <details class="content-card collapsible-card content-card-full">
+          <summary>基础补给牌一览</summary>
           <div class="stack-list">
             ${overviewData.provisions.map((item) => `
               <article class="mini-card">
@@ -185,7 +179,7 @@ function renderOverviewSection(section, index) {
             `).join("")}
           </div>
           <p class="inline-note">${overviewData.provisionsNote}</p>
-        </section>
+        </details>
       </div>
     </section>
   `;
