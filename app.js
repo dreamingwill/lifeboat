@@ -2,7 +2,7 @@ function renderNav(sections) {
   const navList = document.getElementById("nav-list");
 
   navList.innerHTML = sections
-    .map((section) => `<li><a href="#${section.id}">${section.label}</a></li>`)
+    .map((section) => `<li><a href="#${section.id}" data-nav-link="${section.id}">${section.label}</a></li>`)
     .join("");
 }
 
@@ -46,6 +46,10 @@ function renderSection(section, index) {
 
   if (section.id === "scoring") {
     return renderScoringSection(section, index);
+  }
+
+  if (section.id === "strategy") {
+    return renderStrategySection(section, index);
   }
 
   if (section.id === "variants") {
@@ -160,8 +164,19 @@ function renderSetupSection(section, index) {
         <section class="content-card">
           <h3>救生艇初始座位</h3>
           <div class="seat-track">
-            ${setupData.seatOrder.map((seat) => `<div class="seat-stop">${seat}</div>`).join("")}
+            ${setupData.seatOrder.map((seat) => `
+              <button
+                class="seat-stop"
+                type="button"
+                data-seat-name="${seat.name}"
+                data-seat-tip="${seat.tip}"
+              >
+                <strong>${seat.slot}</strong>
+                <span>${seat.name}</span>
+              </button>
+            `).join("")}
           </div>
+          <p class="seat-hint" id="seat-hint">点击任意座位，查看它在开局中的战略提示。</p>
         </section>
         <section class="content-card content-card-full">
           <h3>不同人数建议</h3>
@@ -186,11 +201,16 @@ function renderFlowSection(section, index) {
     <section class="page-section" id="${section.id}">
       <p class="section-meta">Section ${index + 1}</p>
       <h2>${section.title}</h2>
-      <div class="phase-strip">
-        ${flowData.summary.map((phase) => `
-          <article class="phase-card">
-            <h3>${phase.title}</h3>
-            <p>${phase.body}</p>
+      <div class="phase-strip" data-accordion-group="flow">
+        ${flowData.summary.map((phase, phaseIndex) => `
+          <article class="phase-card${phaseIndex === 0 ? " is-open" : ""}" data-accordion-item>
+            <button class="phase-toggle" type="button" aria-expanded="${phaseIndex === 0 ? "true" : "false"}">
+              <span>${phase.title}</span>
+              <span class="phase-toggle-icon" aria-hidden="true"></span>
+            </button>
+            <div class="phase-panel"${phaseIndex === 0 ? "" : " hidden"}>
+              <p>${phase.body}</p>
+            </div>
           </article>
         `).join("")}
       </div>
@@ -287,6 +307,49 @@ function renderScoringSection(section, index) {
   `;
 }
 
+function renderStrategySection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <p>这里把最容易影响胜率的判断拆成三个维度，方便按局势快速切换思路。</p>
+      <div class="strategy-widget">
+        <div class="strategy-tabs" role="tablist" aria-label="策略标签页">
+          ${strategyTabs.map((tab, tabIndex) => `
+            <button
+              class="strategy-tab${tabIndex === 0 ? " is-active" : ""}"
+              type="button"
+              role="tab"
+              aria-selected="${tabIndex === 0 ? "true" : "false"}"
+              aria-controls="strategy-panel-${tab.id}"
+              id="strategy-tab-${tab.id}"
+              data-strategy-tab="${tab.id}"
+            >
+              ${tab.label}
+            </button>
+          `).join("")}
+        </div>
+        <div class="strategy-panels">
+          ${strategyTabs.map((tab, tabIndex) => `
+            <article
+              class="strategy-panel${tabIndex === 0 ? " is-active" : ""}"
+              id="strategy-panel-${tab.id}"
+              role="tabpanel"
+              aria-labelledby="strategy-tab-${tab.id}"
+              ${tabIndex === 0 ? "" : "hidden"}
+            >
+              <h3>${tab.title}</h3>
+              <ul class="bullet-list">
+                ${tab.points.map((point) => `<li>${point}</li>`).join("")}
+              </ul>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 function renderVariantsSection(section, index) {
   return `
     <section class="page-section" id="${section.id}">
@@ -309,11 +372,25 @@ function renderFaqSection(section, index) {
     <section class="page-section" id="${section.id}">
       <p class="section-meta">Section ${index + 1}</p>
       <h2>${section.title}</h2>
+      <div class="faq-toolbar">
+        <button class="faq-toolbar-button" type="button" data-faq-toggle="expand">全部展开</button>
+        <button class="faq-toolbar-button" type="button" data-faq-toggle="collapse">全部收起</button>
+      </div>
       <div class="content-grid">
-        ${faqItems.map((item) => `
-          <article class="content-card faq-card">
-            <h3>${item.q}</h3>
-            <p>${item.a}</p>
+        ${faqItems.map((item, itemIndex) => `
+          <article class="content-card faq-card${item.open ? " is-open" : ""}" data-faq-item>
+            <button
+              class="faq-question"
+              type="button"
+              aria-expanded="${item.open ? "true" : "false"}"
+              aria-controls="faq-panel-${itemIndex}"
+            >
+              <span>${item.q}</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-answer" id="faq-panel-${itemIndex}"${item.open ? "" : " hidden"}>
+              <p>${item.a}</p>
+            </div>
           </article>
         `).join("")}
       </div>
@@ -458,11 +535,156 @@ function bindCharacterTabs() {
   });
 }
 
+function bindStrategyTabs() {
+  const tabButtons = document.querySelectorAll("[data-strategy-tab]");
+  const panels = document.querySelectorAll(".strategy-panel");
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetId = button.dataset.strategyTab;
+
+      tabButtons.forEach((tab) => {
+        const isActive = tab.dataset.strategyTab === targetId;
+        tab.classList.toggle("is-active", isActive);
+        tab.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+
+      panels.forEach((panel) => {
+        const isActive = panel.id === `strategy-panel-${targetId}`;
+        panel.classList.toggle("is-active", isActive);
+        panel.hidden = !isActive;
+      });
+    });
+  });
+}
+
+function bindSeatHints() {
+  const seatButtons = document.querySelectorAll("[data-seat-tip]");
+  const seatHint = document.getElementById("seat-hint");
+
+  if (!seatHint) return;
+
+  seatButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      seatButtons.forEach((item) => item.classList.remove("is-active"));
+      button.classList.add("is-active");
+      seatHint.textContent = `${button.dataset.seatName}：${button.dataset.seatTip}`;
+    });
+  });
+}
+
+function bindAccordions() {
+  const accordionButtons = document.querySelectorAll(".phase-toggle");
+
+  accordionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const card = button.closest("[data-accordion-item]");
+      const panel = card.querySelector(".phase-panel");
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+
+      document.querySelectorAll("[data-accordion-item]").forEach((item) => {
+        item.classList.remove("is-open");
+        item.querySelector(".phase-toggle").setAttribute("aria-expanded", "false");
+        item.querySelector(".phase-panel").hidden = true;
+      });
+
+      if (!isOpen) {
+        card.classList.add("is-open");
+        button.setAttribute("aria-expanded", "true");
+        panel.hidden = false;
+      }
+    });
+  });
+}
+
+function bindFaq() {
+  const questionButtons = document.querySelectorAll(".faq-question");
+  const toolbarButtons = document.querySelectorAll("[data-faq-toggle]");
+
+  function setFaqItemState(card, shouldOpen) {
+    const button = card.querySelector(".faq-question");
+    const answer = card.querySelector(".faq-answer");
+    card.classList.toggle("is-open", shouldOpen);
+    button.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    answer.hidden = !shouldOpen;
+  }
+
+  questionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const card = button.closest("[data-faq-item]");
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+      setFaqItemState(card, !isOpen);
+    });
+  });
+
+  toolbarButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const shouldOpen = button.dataset.faqToggle === "expand";
+      document.querySelectorAll("[data-faq-item]").forEach((item) => setFaqItemState(item, shouldOpen));
+    });
+  });
+}
+
+function bindNavHighlight() {
+  const links = document.querySelectorAll("[data-nav-link]");
+  const sections = [...document.querySelectorAll(".page-section")];
+
+  if (!("IntersectionObserver" in window)) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visibleEntry = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+      if (!visibleEntry) return;
+
+      const activeId = visibleEntry.target.id;
+      links.forEach((link) => link.classList.toggle("is-active", link.dataset.navLink === activeId));
+    },
+    {
+      rootMargin: "-20% 0px -55% 0px",
+      threshold: [0.2, 0.45, 0.7]
+    }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
+function bindMobileNav() {
+  const toggle = document.getElementById("nav-toggle");
+  const navList = document.getElementById("nav-list");
+  const links = document.querySelectorAll("[data-nav-link]");
+
+  if (!toggle || !navList) return;
+
+  toggle.addEventListener("click", () => {
+    const isOpen = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", isOpen ? "false" : "true");
+    navList.classList.toggle("is-open", !isOpen);
+  });
+
+  links.forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        toggle.setAttribute("aria-expanded", "false");
+        navList.classList.remove("is-open");
+      }
+    });
+  });
+}
+
 function bootstrap() {
   document.title = siteMeta.title;
   renderNav(siteMeta.sections);
   renderSections(siteMeta.sections);
   bindCharacterTabs();
+  bindStrategyTabs();
+  bindSeatHints();
+  bindAccordions();
+  bindFaq();
+  bindNavHighlight();
+  bindMobileNav();
 }
 
 bootstrap();
