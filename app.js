@@ -24,6 +24,34 @@ function renderSection(section, index) {
     return renderCharactersSection(section, index);
   }
 
+  if (section.id === "overview") {
+    return renderOverviewSection(section, index);
+  }
+
+  if (section.id === "setup") {
+    return renderSetupSection(section, index);
+  }
+
+  if (section.id === "flow") {
+    return renderFlowSection(section, index);
+  }
+
+  if (section.id === "mechanics") {
+    return renderMechanicsSection(section, index);
+  }
+
+  if (section.id === "scoring") {
+    return renderScoringSection(section, index);
+  }
+
+  if (section.id === "variants") {
+    return renderVariantsSection(section, index);
+  }
+
+  if (section.id === "faq") {
+    return renderFaqSection(section, index);
+  }
+
   return `
     <section class="page-section" id="${section.id}">
       <p class="section-meta">Section ${index + 1}</p>
@@ -31,6 +59,223 @@ function renderSection(section, index) {
       <p>${section.placeholder}</p>
       <div class="section-placeholder">
         当前为骨架占位区。后续模块将在这里挂载真实内容与组件。
+      </div>
+    </section>
+  `;
+}
+
+function renderOverviewSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <p>${overviewData.intro}</p>
+      <div class="content-grid content-grid-two">
+        <section class="content-card">
+          <h3>基础信息</h3>
+          <div class="fact-list">
+            ${overviewData.facts.map(([label, value]) => `
+              <div class="fact-row">
+                <span>${label}</span>
+                <strong>${value}</strong>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+        <section class="content-card">
+          <h3>基础组件</h3>
+          <div class="stack-list">
+            ${overviewData.components.map((item) => `
+              <article class="mini-card">
+                <strong>${item.name}</strong>
+                <span>${item.count}</span>
+                <p>${item.detail}</p>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+        <section class="content-card content-card-full">
+          <h3>25 周年豪华版新增</h3>
+          <div class="pill-list">
+            ${overviewData.anniversary.map((item) => `<span class="pill">${item}</span>`).join("")}
+          </div>
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function renderSetupSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <div class="content-grid content-grid-two">
+        <section class="content-card">
+          <h3>通用准备步骤</h3>
+          <ol class="ordered-list">
+            ${setupData.steps.map((step) => `<li>${step}</li>`).join("")}
+          </ol>
+        </section>
+        <section class="content-card">
+          <h3>救生艇初始座位</h3>
+          <div class="seat-track">
+            ${setupData.seatOrder.map((seat) => `<div class="seat-stop">${seat}</div>`).join("")}
+          </div>
+        </section>
+        <section class="content-card content-card-full">
+          <h3>不同人数建议</h3>
+          <div class="stack-list">
+            ${setupData.playerCounts.map((item) => `
+              <article class="mini-card">
+                <strong>${item.players}</strong>
+                <span>${item.keep}</span>
+                <p>${item.note}</p>
+              </article>
+            `).join("")}
+          </div>
+          <p class="inline-note">${setupData.warning}</p>
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function renderFlowSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <div class="phase-strip">
+        ${flowData.summary.map((phase) => `
+          <article class="phase-card">
+            <h3>${phase.title}</h3>
+            <p>${phase.body}</p>
+          </article>
+        `).join("")}
+      </div>
+      <div class="content-grid content-grid-two">
+        <section class="content-card">
+          <h3>行动阶段选项</h3>
+          <div class="stack-list">
+            ${flowData.actions.map((action) => `
+              <article class="mini-card">
+                <strong>${action.name}</strong>
+                <span>${action.resist}</span>
+                <p>${action.detail}</p>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+        <section class="content-card">
+          <h3>航行图标</h3>
+          <div class="stack-list">
+            ${flowData.navigationIcons.map((item) => `
+              <article class="mini-card mini-card-icon">
+                <strong>${item.icon} ${item.name}</strong>
+                <p>${item.detail}</p>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function renderMechanicsSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <div class="content-grid content-grid-two">
+        <section class="content-card">
+          <h3>位置价值</h3>
+          <div class="stack-list">
+            ${mechanicData.position.map((item) => `
+              <article class="mini-card">
+                <strong>${item.title}</strong>
+                <span>${item.weight}</span>
+                <p>${item.detail}</p>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+        <section class="content-card">
+          <h3>关键机制</h3>
+          <div class="stack-list">
+            ${mechanicData.systems.map((item) => `
+              <article class="mini-card">
+                <strong>${item.title}</strong>
+                <ul class="bullet-list">
+                  ${item.points.map((point) => `<li>${point}</li>`).join("")}
+                </ul>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function renderScoringSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <p>${scoringRules.endTrigger}</p>
+      <div class="content-grid content-grid-two">
+        <section class="content-card">
+          <h3>得分来源</h3>
+          <div class="fact-list">
+            ${scoringRules.sources.map(([label, value]) => `
+              <div class="fact-row">
+                <span>${label}</span>
+                <strong>${value}</strong>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+        <section class="content-card">
+          <h3>${scoringRules.example.title}</h3>
+          <p>${scoringRules.example.body}</p>
+          <p class="inline-note">${scoringRules.note}</p>
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function renderVariantsSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <div class="content-grid">
+        ${variantCards.map((item) => `
+          <article class="content-card">
+            <h3>${item.title}</h3>
+            <p>${item.detail}</p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderFaqSection(section, index) {
+  return `
+    <section class="page-section" id="${section.id}">
+      <p class="section-meta">Section ${index + 1}</p>
+      <h2>${section.title}</h2>
+      <div class="content-grid">
+        ${faqItems.map((item) => `
+          <article class="content-card faq-card">
+            <h3>${item.q}</h3>
+            <p>${item.a}</p>
+          </article>
+        `).join("")}
       </div>
     </section>
   `;
