@@ -654,6 +654,186 @@ a {
   font-size: 20px;
 }
 
+.scoring-calculator {
+  margin-top: 22px;
+}
+
+.calculator-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 22px;
+}
+
+.calculator-toolbar h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.calculator-toolbar p {
+  max-width: 720px;
+}
+
+.calculator-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scoring-layout {
+  align-items: start;
+}
+
+.score-player-list,
+.score-rel-list,
+.score-breakdown-list {
+  display: grid;
+  gap: 12px;
+}
+
+.score-player-card,
+.score-rel-card,
+.score-breakdown-card,
+.score-summary-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.score-player-card,
+.score-rel-card,
+.score-breakdown-card {
+  padding: 14px;
+}
+
+.score-player-card.is-inactive,
+.score-rel-card.is-inactive {
+  opacity: 0.52;
+}
+
+.score-player-top,
+.score-breakdown-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.score-active-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.score-active-toggle input {
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+.score-meta,
+.score-breakdown-head span {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.score-status-row,
+.score-rel-grid,
+.score-treasure-grid {
+  margin-top: 12px;
+}
+
+.score-status-row label,
+.score-rel-grid label,
+.score-treasure-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.score-rel-grid,
+.score-treasure-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.score-treasure-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.score-player-card select,
+.score-player-card input[type="number"],
+.score-rel-card select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.score-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.score-summary-card {
+  padding: 14px;
+}
+
+.score-summary-card span,
+.score-summary-card strong,
+.score-summary-card b {
+  display: block;
+}
+
+.score-summary-card span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.score-summary-card strong {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.score-summary-card b {
+  margin-top: 6px;
+  color: var(--color-accent-strong);
+  font-size: 24px;
+}
+
+.score-summary-card.is-leading {
+  background: rgba(19, 93, 102, 0.12);
+  border-color: rgba(19, 93, 102, 0.2);
+}
+
+.score-breakdown-head strong,
+.score-breakdown-head span {
+  display: block;
+}
+
+.score-breakdown-head > span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-surface-soft);
+}
+
+.score-breakdown-card .bullet-list {
+  margin-top: 12px;
+}
+
+.score-empty {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-soft);
+}
+
 .faq-toolbar {
   display: flex;
   gap: 10px;
@@ -1004,5 +1184,17 @@ a {
 
   .faq-toolbar {
     flex-direction: column;
+  }
+
+  .calculator-toolbar,
+  .score-player-top,
+  .score-breakdown-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .score-rel-grid,
+  .score-treasure-grid {
+    grid-template-columns: 1fr;
   }
 }

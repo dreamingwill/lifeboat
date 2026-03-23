@@ -13,7 +13,7 @@ function renderSections(sections) {
     <div class="page-sections">
       ${sections.map(renderSection).join("")}
       <footer class="site-footer">
-        <p>模块 1 已完成：页面骨架、sticky nav、10 个 section 占位与本地多文件引用已建立。</p>
+        <p>当前版本已包含角色指南、计分规则与可交互的终局计分器。</p>
       </footer>
     </div>
   `;
@@ -302,7 +302,19 @@ function renderScoringSection(section, index) {
           <p>${scoringRules.example.body}</p>
           <p class="inline-note">${scoringRules.note}</p>
         </section>
+        <section class="content-card content-card-full">
+          <h3>特殊关系判定</h3>
+          <div class="stack-list">
+            ${scoringRules.specialCases.map(([label, value]) => `
+              <article class="mini-card">
+                <strong>${label}</strong>
+                <p>${value}</p>
+              </article>
+            `).join("")}
+          </div>
+        </section>
       </div>
+      ${renderScoringCalculator()}
     </section>
   `;
 }
@@ -462,7 +474,7 @@ function renderCharacterCard(char, index) {
           <h4>角色数值</h4>
           ${renderCharacterStat("体型（战斗力）", char.size, 8, char.color)}
           ${renderCharacterStat("体力（血量上限）", char.hp, 8, char.color)}
-          ${renderCharacterStat("生存分", char.sv, 6, char.color, " 分")}
+          ${renderCharacterStat("生存分", char.sv, 9, char.color, " 分")}
           <div class="character-row">
             <span>角色类型</span>
             <strong>${char.type}</strong>
@@ -512,6 +524,83 @@ function renderCharacterStat(label, value, maxValue, color, suffix = "") {
   `;
 }
 
+function renderScoringCalculator() {
+  return `
+    <div class="scoring-calculator" data-scoring-calculator>
+      <div class="calculator-toolbar">
+        <div>
+          <h3>终局计分器</h3>
+          <p>先标记本局出场角色，再填每名角色的生死、财宝和爱恨关系，结果会自动更新。</p>
+        </div>
+        <div class="calculator-actions">
+          <button class="faq-toolbar-button" type="button" data-score-action="example">载入示例</button>
+          <button class="faq-toolbar-button" type="button" data-score-action="reset">重置</button>
+        </div>
+      </div>
+      <div class="content-grid content-grid-two scoring-layout">
+        <section class="content-card">
+          <h3>角色状态与财宝</h3>
+          <div class="score-player-list">
+            ${chars.map((char) => `
+              <article class="score-player-card" data-score-player="${char.id}">
+                <div class="score-player-top">
+                  <label class="score-active-toggle">
+                    <input type="checkbox" data-score-active checked>
+                    <span>${char.icon} ${char.name.split(" ")[0]}</span>
+                  </label>
+                  <span class="score-meta">体型 ${char.size} · 生存分 ${char.sv}</span>
+                </div>
+                <div class="score-status-row">
+                  <label>
+                    <span>终局状态</span>
+                    <select data-score-status>
+                      <option value="alive">存活</option>
+                      <option value="dead">死亡</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="score-treasure-grid">
+                  ${scoringTreasureTypes.map((type) => `
+                    <label>
+                      <span>${type.label}${char.treasureBonus === type.id ? " ×2" : ""}</span>
+                      <input type="number" min="0" step="1" value="0" data-score-treasure="${type.id}">
+                    </label>
+                  `).join("")}
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+        <section class="content-card">
+          <h3>爱恨公开</h3>
+          <div class="score-rel-list">
+            ${chars.map((char) => `
+              <article class="score-rel-card" data-score-rel="${char.id}">
+                <strong>${char.icon} ${char.name.split(" ")[0]}</strong>
+                <div class="score-rel-grid">
+                  <label>
+                    <span>爱</span>
+                    <select data-score-love></select>
+                  </label>
+                  <label>
+                    <span>恨</span>
+                    <select data-score-hate></select>
+                  </label>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+          <p class="inline-note" data-score-warning>提示：若爱自己就是“自恋”，恨自己就是“反社会”，爱恨同指一人则按“矛盾”处理。</p>
+        </section>
+        <section class="content-card content-card-full">
+          <h3>计分结果</h3>
+          <div class="score-results" data-score-results></div>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
 function bindCharacterTabs() {
   const tabButtons = document.querySelectorAll("[data-character-tab]");
   const panels = document.querySelectorAll(".character-card");
@@ -532,6 +621,295 @@ function bindCharacterTabs() {
         panel.hidden = !isActive;
       });
     });
+  });
+}
+
+function buildRelationOptions(activeChars, selectedValue) {
+  return ['<option value="">未公开</option>']
+    .concat(
+      activeChars.map((char) => `
+        <option value="${char.id}"${selectedValue === char.id ? " selected" : ""}>${char.name.split(" ")[0]}</option>
+      `)
+    )
+    .join("");
+}
+
+function getScoringState(container) {
+  const state = {};
+
+  chars.forEach((char) => {
+    const playerCard = container.querySelector(`[data-score-player="${char.id}"]`);
+    const relCard = container.querySelector(`[data-score-rel="${char.id}"]`);
+    const active = playerCard.querySelector("[data-score-active]").checked;
+
+    state[char.id] = {
+      ...char,
+      active,
+      status: playerCard.querySelector("[data-score-status]").value,
+      love: relCard.querySelector("[data-score-love]").value,
+      hate: relCard.querySelector("[data-score-hate]").value,
+      treasures: scoringTreasureTypes.reduce((acc, type) => {
+        const input = playerCard.querySelector(`[data-score-treasure="${type.id}"]`);
+        const value = Number.parseInt(input.value, 10);
+        acc[type.id] = Number.isFinite(value) && value > 0 ? value : 0;
+        return acc;
+      }, {})
+    };
+  });
+
+  return state;
+}
+
+function calculateTreasureScore(playerState) {
+  return scoringTreasureTypes.reduce((total, type) => {
+    const amount = playerState.treasures[type.id] || 0;
+    const multiplier = playerState.treasureBonus === type.id ? 2 : 1;
+    return total + amount * multiplier;
+  }, 0);
+}
+
+function calculatePlayerScore(playerState, state) {
+  const activePlayers = Object.values(state).filter((item) => item.active);
+  const deadPlayers = activePlayers.filter((item) => item.status === "dead");
+  const breakdown = [];
+  let total = 0;
+
+  const isAlive = playerState.status === "alive";
+  const loveTarget = playerState.love ? state[playerState.love] : null;
+  const hateTarget = playerState.hate ? state[playerState.hate] : null;
+  const isNarcissist = playerState.love === playerState.id;
+  const isPsychopath = playerState.hate === playerState.id;
+  const isAmbivalent = Boolean(playerState.love) && playerState.love === playerState.hate;
+
+  if (isAlive && !isPsychopath) {
+    const selfScore = playerState.sv * (isNarcissist ? 2 : 1);
+    total += selfScore;
+    breakdown.push(`自己存活：${selfScore}`);
+  } else if (isAlive && isPsychopath) {
+    breakdown.push("自己存活：0（反社会没有自身生存分）");
+  } else {
+    breakdown.push("自己存活：0");
+  }
+
+  if (isPsychopath) {
+    const psychopathScore = deadPlayers
+      .filter((item) => item.id !== playerState.id)
+      .reduce((sum, item) => sum + item.size, 0);
+
+    total += psychopathScore;
+    breakdown.push(`反社会：${psychopathScore}`);
+  } else if (isAmbivalent && loveTarget && loveTarget.active) {
+    const loveScore = loveTarget.status === "alive" ? loveTarget.sv : 0;
+    const hateScore = loveTarget.status === "dead" ? loveTarget.size : 0;
+    const ambivalentScore = Math.max(loveScore, hateScore);
+
+    total += ambivalentScore;
+    breakdown.push(`矛盾（取高）：${ambivalentScore}`);
+  } else {
+    if (loveTarget && loveTarget.active) {
+      const loveScore = loveTarget.status === "alive" ? loveTarget.sv : 0;
+      total += loveScore;
+      breakdown.push(`所爱角色：${loveScore}`);
+    } else if (playerState.love) {
+      breakdown.push("所爱角色：0（该角色未出场）");
+    } else {
+      breakdown.push("所爱角色：0");
+    }
+
+    if (hateTarget && hateTarget.active) {
+      const hateScore = hateTarget.status === "dead" ? hateTarget.size : 0;
+      total += hateScore;
+      breakdown.push(`所恨角色：${hateScore}`);
+    } else if (playerState.hate) {
+      breakdown.push("所恨角色：0（该角色未出场）");
+    } else {
+      breakdown.push("所恨角色：0");
+    }
+  }
+
+  const treasureScore = calculateTreasureScore(playerState);
+  total += treasureScore;
+  breakdown.push(`财宝：${treasureScore}`);
+
+  return { total, breakdown };
+}
+
+function renderScoreResults(container) {
+  const resultsHost = container.querySelector("[data-score-results]");
+  const warning = container.querySelector("[data-score-warning]");
+  const state = getScoringState(container);
+  const activePlayers = chars.filter((char) => state[char.id].active);
+
+  if (!activePlayers.length) {
+    resultsHost.innerHTML = '<p class="score-empty">至少勾选 1 名出场角色后，计分器才会开始计算。</p>';
+    warning.textContent = "提示：先勾选本局实际出场的角色，未出场角色不会参与爱恨、死亡或财宝计算。";
+    return;
+  }
+
+  const invalidSelfLoop = activePlayers.some((char) => {
+    const player = state[char.id];
+    return player.love === player.id && player.hate === player.id;
+  });
+
+  warning.textContent = invalidSelfLoop
+    ? "提示：同一名角色同时“爱自己又恨自己”通常不属于基础规则牌组，结果仅作近似参考。"
+    : "提示：若爱自己就是“自恋”，恨自己就是“反社会”，爱恨同指一人则按“矛盾”处理。";
+
+  const ranking = activePlayers
+    .map((char) => {
+      const score = calculatePlayerScore(state[char.id], state);
+      return { char, ...score };
+    })
+    .sort((a, b) => b.total - a.total || b.char.sv - a.char.sv);
+
+  resultsHost.innerHTML = `
+    <div class="score-summary-strip">
+      ${ranking.map((item, index) => `
+        <article class="score-summary-card${index === 0 ? " is-leading" : ""}">
+          <span>${index === 0 ? "当前领先" : `第 ${index + 1} 名`}</span>
+          <strong>${item.char.icon} ${item.char.name.split(" ")[0]}</strong>
+          <b>${item.total} 分</b>
+        </article>
+      `).join("")}
+    </div>
+    <div class="score-breakdown-list">
+      ${ranking.map((item) => `
+        <article class="score-breakdown-card">
+          <div class="score-breakdown-head">
+            <div>
+              <strong>${item.char.icon} ${item.char.name}</strong>
+              <span>总分 ${item.total}</span>
+            </div>
+            <span>${state[item.char.id].status === "alive" ? "存活" : "死亡"}</span>
+          </div>
+          <ul class="bullet-list">
+            ${item.breakdown.map((line) => `<li>${line}</li>`).join("")}
+          </ul>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function syncScoringControls(container) {
+  const state = getScoringState(container);
+  const activeChars = chars.filter((char) => state[char.id].active);
+
+  chars.forEach((char) => {
+    const playerCard = container.querySelector(`[data-score-player="${char.id}"]`);
+    const relCard = container.querySelector(`[data-score-rel="${char.id}"]`);
+    const loveSelect = relCard.querySelector("[data-score-love]");
+    const hateSelect = relCard.querySelector("[data-score-hate]");
+    const isActive = state[char.id].active;
+
+    playerCard.classList.toggle("is-inactive", !isActive);
+    relCard.classList.toggle("is-inactive", !isActive);
+
+    playerCard.querySelectorAll("select, input[type='number']").forEach((control) => {
+      control.disabled = !isActive;
+    });
+
+    loveSelect.disabled = !isActive;
+    hateSelect.disabled = !isActive;
+
+    if (!isActive) {
+      loveSelect.value = "";
+      hateSelect.value = "";
+    }
+
+    loveSelect.innerHTML = buildRelationOptions(activeChars, state[char.id].love);
+    hateSelect.innerHTML = buildRelationOptions(activeChars, state[char.id].hate);
+  });
+}
+
+function applyScorePreset(container, preset) {
+  chars.forEach((char) => {
+    const playerCard = container.querySelector(`[data-score-player="${char.id}"]`);
+    const relCard = container.querySelector(`[data-score-rel="${char.id}"]`);
+    const playerPreset = preset[char.id] || {};
+
+    playerCard.querySelector("[data-score-active]").checked = playerPreset.active ?? true;
+    playerCard.querySelector("[data-score-status]").value = playerPreset.status ?? "alive";
+
+    scoringTreasureTypes.forEach((type) => {
+      playerCard.querySelector(`[data-score-treasure="${type.id}"]`).value = playerPreset.treasures?.[type.id] ?? 0;
+    });
+
+    relCard.querySelector("[data-score-love]").dataset.pendingValue = playerPreset.love ?? "";
+    relCard.querySelector("[data-score-hate]").dataset.pendingValue = playerPreset.hate ?? "";
+  });
+
+  syncScoringControls(container);
+
+  chars.forEach((char) => {
+    const relCard = container.querySelector(`[data-score-rel="${char.id}"]`);
+    const loveSelect = relCard.querySelector("[data-score-love]");
+    const hateSelect = relCard.querySelector("[data-score-hate]");
+    const pendingLove = loveSelect.dataset.pendingValue || "";
+    const pendingHate = hateSelect.dataset.pendingValue || "";
+
+    loveSelect.value = pendingLove;
+    hateSelect.value = pendingHate;
+
+    delete loveSelect.dataset.pendingValue;
+    delete hateSelect.dataset.pendingValue;
+  });
+
+  renderScoreResults(container);
+}
+
+function bindScoringCalculator() {
+  const container = document.querySelector("[data-scoring-calculator]");
+
+  if (!container) return;
+
+  const examplePreset = {
+    captain: { active: true, status: "alive", love: "kid", hate: "mate", treasures: { cash: 5, jewelry: 0, art: 0 } },
+    mate: { active: true, status: "dead", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
+    frenchy: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
+    stephen: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
+    lauren: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } },
+    kid: { active: true, status: "alive", love: "", hate: "", treasures: { cash: 0, jewelry: 0, art: 0 } }
+  };
+
+  const resetPreset = chars.reduce((acc, char) => {
+    acc[char.id] = {
+      active: true,
+      status: "alive",
+      love: "",
+      hate: "",
+      treasures: { cash: 0, jewelry: 0, art: 0 }
+    };
+    return acc;
+  }, {});
+
+  syncScoringControls(container);
+  renderScoreResults(container);
+
+  container.addEventListener("input", (event) => {
+    if (!event.target.closest("[data-score-player]")) return;
+    syncScoringControls(container);
+    renderScoreResults(container);
+  });
+
+  container.addEventListener("change", (event) => {
+    if (!event.target.closest("[data-score-player], [data-score-rel]")) return;
+    syncScoringControls(container);
+    renderScoreResults(container);
+  });
+
+  container.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-score-action]");
+
+    if (!actionButton) return;
+
+    if (actionButton.dataset.scoreAction === "example") {
+      applyScorePreset(container, examplePreset);
+    }
+
+    if (actionButton.dataset.scoreAction === "reset") {
+      applyScorePreset(container, resetPreset);
+    }
   });
 }
 
@@ -679,6 +1057,7 @@ function bootstrap() {
   renderNav(siteMeta.sections);
   renderSections(siteMeta.sections);
   bindCharacterTabs();
+  bindScoringCalculator();
   bindStrategyTabs();
   bindSeatHints();
   bindAccordions();

@@ -1,6 +1,6 @@
 const siteMeta = {
   title: "骇浪求生 Lifeboat 攻略站",
-  description: "模块 1 骨架版：用于承载后续静态内容、角色系统与计分模拟器。",
+  description: "整理 Lifeboat 的规则、角色系统与终局计分，支持直接在页面内试算结局。",
   sections: [
     { id: "hero", label: "Hero", title: "欢迎页", placeholder: "后续模块会补上 Hero 的完整视觉与摘要信息。" },
     { id: "overview", label: "游戏简介", title: "游戏简介", placeholder: "后续映射 docs/game_guide_data.md 中的一、二部分内容。" },
@@ -158,12 +158,23 @@ const scoringRules = {
     ["自恋", "自己的生存分额外再 ×2"],
     ["反社会", "每个死亡角色（除自己外）的体型值都算分"]
   ],
+  specialCases: [
+    ["自恋（爱自己）", "只有自己活着时才得分，并把自己的生存分翻倍。"],
+    ["反社会（恨自己）", "改为统计所有其他死者的体型值；自己就算活着也没有自身生存分。"],
+    ["矛盾（爱恨同人）", "爱分和恨分不叠加，只取两者里较高的一项。"]
+  ],
   example: {
     title: "船长示例",
     body: "玩家 A 扮演船长，秘密爱小孩、恨大副，手里有 3 分和 2 分现金。若终局船长与小孩存活、大副死亡，则得分为 5 + 9 + 8 + 10 = 32 分。"
   },
   note: "即使角色死亡，爱恨结算依旧有效，所以死亡玩家理论上仍能赢。"
 };
+
+const scoringTreasureTypes = [
+  { id: "cash", label: "现金" },
+  { id: "jewelry", label: "珠宝" },
+  { id: "art", label: "艺术品" }
+];
 
 const strategyTabs = [
   {
@@ -260,7 +271,8 @@ const chars = [
     bgt: "#F5C4B3",
     size: 7,
     hp: 7,
-    sv: 2,
+    sv: 5,
+    treasureBonus: "cash",
     type: "⚔ 进攻型",
     special: "现金得分×2",
     pos: "初始位置 #3",
@@ -289,7 +301,8 @@ const chars = [
     bgt: "#CECBF6",
     size: 8,
     hp: 8,
-    sv: 1,
+    sv: 4,
+    treasureBonus: "",
     type: "⚔ 进攻型",
     special: "无特殊能力（纯战力）",
     pos: "初始位置 #4",
@@ -318,7 +331,8 @@ const chars = [
     bgt: "#FAC775",
     size: 6,
     hp: 6,
-    sv: 3,
+    sv: 6,
+    treasureBonus: "",
     type: "⚔ 综合型",
     special: "落水时免受1点伤害",
     pos: "初始位置 #5",
@@ -347,7 +361,8 @@ const chars = [
     bgt: "#9FE1CB",
     size: 5,
     hp: 5,
-    sv: 4,
+    sv: 7,
+    treasureBonus: "art",
     type: "💰 财富型",
     special: "美术品得分×2",
     pos: "初始位置 #2",
@@ -376,7 +391,8 @@ const chars = [
     bgt: "#F4C0D1",
     size: 4,
     hp: 4,
-    sv: 5,
+    sv: 8,
+    treasureBonus: "jewelry",
     type: "💎 财富型",
     special: "珠宝得分×2",
     pos: "初始位置 #1（船头）",
@@ -405,7 +421,8 @@ const chars = [
     bgt: "#C0DD97",
     size: 3,
     hp: 3,
-    sv: 6,
+    sv: 9,
+    treasureBonus: "",
     type: "🕵 隐身型",
     special: "偷窃手牌不触发战斗",
     pos: "初始位置 #6（船尾）",
