@@ -536,12 +536,12 @@ function renderCharacterCard(char, index) {
             <p>${char.ally}</p>
           </div>
         </details>
-        <section class="character-panel character-panel-full">
-          <h4>核心打法</h4>
+        <details class="character-panel character-panel-collapsible character-panel-full">
+          <summary>核心打法</summary>
           <div class="character-tips">
             ${char.tips.map((tip) => `<p>${tip}</p>`).join("")}
           </div>
-        </section>
+        </details>
         <section class="character-verdict" style="--character-verdict-bg:${char.verdictColor};--character-color:${char.verdictBorder};">
           <strong>总评</strong>
           <p>${char.verdict}</p>

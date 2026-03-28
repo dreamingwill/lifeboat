@@ -703,6 +703,10 @@ a {
   margin-top: 12px;
 }
 
+.character-panel-collapsible .character-tips {
+  margin-top: 12px;
+}
+
 .scoring-callout {
   margin-top: 14px;
   padding: 12px 14px;
@@ -891,6 +895,12 @@ a {
 .score-player-card.is-inactive,
 .score-rel-card.is-inactive {
   opacity: 0.52;
+}
+
+.score-player-card.is-inactive .score-status-row,
+.score-player-card.is-inactive .score-treasure-grid,
+.score-rel-card.is-inactive .score-rel-grid {
+  display: none;
 }
 
 .score-player-top,
